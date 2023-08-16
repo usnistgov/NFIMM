@@ -1,0 +1,34 @@
+
+# Windows
+Build output may be redirected to any convenient dir by utilizing the '-B' switch for the 'cmake' command.
+For the Windows examples below, build output is redirected to RAMDRIVE (R:\).  A nice tool to create RAMDRIVE for
+Windows is OFSMount (osforensics.com).
+
+Open a PowerShell terminal, create and change-to the 'build' subdir, and run:
+
+.\NFIMM\build> cmake -S .. -B R:\NFIMM -DCMAKE_CONFIGURATION_TYPES="Release" -D_WIN32_64=1
+.\NFIMM\build> MSBuild.exe R:\NFIMM\NFIMM.sln
+
+Library file is located here on successful build:
+R:\NFIMM\src\lib\Release\NFIMM.lib
+
+## How to Run Example Binary
+Open a terminal:
+```
+R:\NFIMM\src\bin\Release>NFIMM_bin.exe
+```
+
+# Linux and Mac
+In a terminal, create and change-to the 'build' subdir, and run:
+
+./NFIMM/build$ cmake ..
+./NFIMM/build$ make
+
+Library file is located here on successful build:
+./NFIMM/src/lib/libNFIMM.a
+
+# How to Run Example Binary
+Open a terminal:
+```
+user:~/.../NFIMM/build$ ./src/bin/NFIMM_bin
+```

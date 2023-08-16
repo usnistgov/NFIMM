@@ -1,0 +1,10 @@
+/build
+/doc/html
+/doc/rtf
+/doc/*.docx
+/bin
+/obj
+/lib
+/img
+*.backup
+/.vscode/*.log
