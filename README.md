@@ -105,30 +105,7 @@ All caught exceptions cause the library to abort and throw the exception message
 
 
 # Build NFIMM
-See also `./build_commands.txt`.
-
-## Windows
-From the `build` subdir, open PowerShell terminal:
-
-```
-.\NFIMM\build> cmake -S .. -B R:\NFIMM -DCMAKE_CONFIGURATION_TYPES="Release"
-.\NFIMM\build> MSBuild.exe R:\NFIMM\nfimm.sln
-```
-
-The library file is linked into `.\NFIMM\src\lib\Release\nfimm.lib`.
-
-## Linux
-Use these steps for any Linux OS.
-
-In a terminal, change to the `build` subdir and run:
-
-```
-./NFIMM$ mkdir build; cd build
-./build$ cmake ..
-./build$ make
-```
-
-The library file is linked into `./NFIMM/lib/static/libnfimm.a`.
+See file `./build_commands.txt`.
 
 # Use NFIMM
 A binary is included in this project to server as an example of how to use NFIMM.
