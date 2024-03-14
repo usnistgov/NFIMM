@@ -5,6 +5,5 @@
 /bin
 /obj
 /lib
-/img
 *.backup
-/.vscode/*.log
+/.vscode

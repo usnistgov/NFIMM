@@ -9,10 +9,48 @@ All computer-system requirements to build and store **NFIMM** are fairly minimal
 
 Across all operating systems, C++ 11 or higher is required to compile.
 
+# Quick Start
+Since **NFIMM** is designed as a software library, a using-binary is included in this distribution for convenience.
+
+The binary and its source code provide the following:
+1. Run out-of-the-box to validate the build
+2. Demonstrate how to use the **NFIMM** library
+3. Serve as starting-point for user to write their own using-application
+
+## Windows Build
+Using `cmake` and `MSBuild`, build the library and executable.
+
+Create and change-to `build` subdir:
+```
+NFIMM\build> cmake .. -DCMAKE_CONFIGURATION_TYPES="Release" -D_WIN32_64=1
+NFIMM\build> MSBuild NFIMM.sln
+```
+
+## Windows Runtime
+Run the executable to generate a "new" image.  Note that the original image remains intact by design.
+
+```
+NFIMM\build\src\bin\Release> NFIMM_bin.exe
+```
+
+## Check the Result
+There should be a new `ducks_grey.png` image here:
+```
+NFIMM\img\dest> dir
+
+    <DIR>          .
+    <DIR>          ..
+           191,986 ducks_grey.png
+           191,986 ducks_grey_compare.png
+```
+The generated and "compare" images are same size, and comparison of the headers should prove identical except timestamp.
+
+<!-- start readme overview -->
+
 # Overview
 **NFIMM** functions to update image (file) metadata information.  It leaves the original image file unchanged and generates a new image file with the updated metadata.  It is incumbent upon users to manage their image files.
 
-<!-- end project overview -->
+<!-- end readme overview -->
 
 ## Example Usage Scenario by NFIR
 The NIST Fingerprint Image Resampler (**NFIR**) library is utilized to downsample a PNG source image's image-data from 600 to 500 PPI (pixels per inch); the 500PPI image (known as the "destination") is saved to the file system.  In order to be most correct after resampling, the destination image sample rate (resolution/DPI) header info should be updated to reflect the new sample rate.
@@ -23,34 +61,36 @@ After the downsample, **NFIR** calls **NFIMM** and passes it the following image
 
 Metadata | Object | Value
 --------------------------------|---------|--------------------------
-source image file               | buffer  | array of bytes
 source image compression format | string  | "png"
 source sample rate              | int     | 600
 destination sample rate         | int     | 500
 destination sample rate units   | string  | "inch"
 PNG custom text                 | string  | see below
 
-*Table 1 - NFIMM metadata parameters*
+*Table 1 - NFIMM metadata parameters for NFIR example*
 
 
-For PNG, **NFIMM** programatically insert the following `tEXt` chunk key:value pairs:
+For PNG, **NFIMM** programatically inserts the following `tEXt` chunk key:value pairs:
 ```
    Comment:[ Updated pHYs | Inserted pHYs] 
    Software:Header mod by NFIMM
 ```
 
-Note that specified source and destination sample rate applies to the horizontal and vertical "rows and columns" (of the image).
+Note that specified source and destination sample rate applies to the horizontal and vertical "rows and columns"
+(of the image).
 
 <span class="redc">
 *For fingerprint imagery, the horizontal and vertical sample rates are ALWAYS treated as equal*.
 </span>
 
 ## NFIMM API
+The following are supplied by the NFIMM user/caller:
 
-The destination image metadata to be updated is supplied by the NFIMM user/caller:
+1. Source image PATH or bytes-stream (`std::vector<uint8_t>`)
+2. Destination (aka target) image PATH
+3. Source and destination image metadata:
 
 - Required
-  - source image bytes-stream (`std::vector<uint8_t>`)
   - source image compression format
   - destination image sample rate
   - destination image sample rate units
@@ -58,7 +98,8 @@ The destination image metadata to be updated is supplied by the NFIMM user/calle
   - source image sample rate
   - PNG custom text: Description, Author, Creation Time, etc.
 
-Note that the destination image compression format is constrained to be the same as the source image and therefore is not a required input parameter.
+Note that the destination image compression format is constrained to be the same as the source image and therefore
+is not a required input parameter.
 
 Table 2 lists the available metadata parameters:
 
@@ -111,8 +152,12 @@ See file `./build_commands.txt`.
 A binary is included in this project to server as an example of how to use NFIMM.
 
 ## Perform the Metadata Modification
+The code-block below demonstrates how the **NFIMM** library is utilized including initialization of the metadata
+parameters, instantiation of the proper derived-class, and calls to the API:
 
 ```
+  #include "nfimm.h"
+
   // Declare the pointers to metadata params and metadata modifier objects.
   // NFIMM is the base class for PNG and BMP derived classes.
   std::shared_ptr<NFIMM::MetadataParameters> mp;

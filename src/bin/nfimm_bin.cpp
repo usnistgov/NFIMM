@@ -57,9 +57,10 @@ int main(int argc, char** argv)
         "Creation Time:file" };
       mp->destImg.textChunk = vecPngTextChunk;
 
-      pathToSrcImage = "your-input-image.bmp";
-      pathToDestImage = "your-output-image.bmp";
+      pathToSrcImage = "..\\..\\..\\..\\img\\src\\ducks_grey.png";
+      pathToDestImage = "..\\..\\..\\..\\img\\dest\\ducks_grey.png";
       std::cout << "pathToSrcImage: " << pathToSrcImage << std::endl;
+      std::cout << "pathToDestImage: " << pathToDestImage << std::endl;
       nfimm_mp.reset( new NFIMM::PNG( mp ) );
     }
 
