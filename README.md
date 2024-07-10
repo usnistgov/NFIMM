@@ -1,16 +1,28 @@
 ![nist-logo](doc/img/f_nist-logo-brand-2c_512wide.png)
 
 # NFIMM
-The **NFIMM (NIST Fingerprint Image Metadata Modifier)** is available for Windows and Linux.  It builds on MacOS but has not been tested.
+The **NFIMM (NIST Fingerprint Image Metadata Modifier)** is available for Windows and Linux.  It builds on MacOS but
+has not been tested.
 
 **NFIMM** is written in C++ and built into a software library.  This affords users to write their own using-application.
 
-All computer-system requirements to build and store **NFIMM** are fairly minimal and are easily satisfied by modern hardware and software tools.  All software dependencies and tools used to compile source code and implement functionality are available at no cost.
+All computer-system requirements to build and store **NFIMM** are fairly minimal and are easily satisfied by modern
+ hardware and software tools.  All software dependencies and tools used to compile source code and implement
+ functionality are available at no cost.
 
-Across all operating systems, C++ 11 or higher is required to compile.
+Across all operating systems, C++17 or higher is required to compile.
+
+# NFIMM Purpose
+**NFIMM** has one major purpose: to update an image-file's resolution metadata.
+
+When an image is down- or up-sampled, its resolution metadata should be updated to reflect the "new" resolution.
+
+For those image compression-types that support additional information, like PNG, new metadata may be inserted.
+
+**NFIMM** does not modify the image-file's image-data; it is "transferred" to the newly generated image.
 
 # Quick Start
-Since **NFIMM** is designed as a software library, a using-binary is included in this distribution for convenience.
+Since **NFIMM** is designed as a software library, a driver is included in this distribution for convenience.
 
 The binary and its source code provide the following:
 1. Run out-of-the-box to validate the build
@@ -20,17 +32,39 @@ The binary and its source code provide the following:
 ## Windows Build
 Using `cmake` and `MSBuild`, build the library and executable.
 
+```
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.8.6
+** Copyright (c) 2022 Microsoft Corporation
+**********************************************************************
+
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise>cmake --version
+cmake version 3.22.3
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise>MSBuild --version
+MSBuild version 17.8.5+b5265ef37 for .NET Framework
+17.8.5.5502
+```
+
 Create and change-to `build` subdir:
 ```
 NFIMM\build> cmake .. -DCMAKE_CONFIGURATION_TYPES="Release" -D_WIN32_64=1
-NFIMM\build> MSBuild NFIMM.sln
+NFIMM\build> MSBuild NFIMM_ITL.sln
 ```
 
-## Windows Runtime
-Run the executable to generate a "new" image.  Note that the original image remains intact by design.
+See also file `./build_commands.txt`.
+
+## Complementary Binary
+This simple binary exercises the `NFIMM` library and generates a "new" image.
+
+Note that for the runtime command below, the `-m` switch is not required because PNG is serviced by default, and
+ the source-image sample rate is optional (`-a`).
 
 ```
-NFIMM\build\src\bin\Release> NFIMM_bin.exe
+.\NFIMM\build\src\bin\Release>NFIMM_bin.exe -b 500 -c inch -s ..\..\..\..\img\src\ducks_grey.png -t ..\..\..\..\img\dest\ducks_grey_comp.png -e "Description:Original image downsampled from 600PPI" "Author:NIST-ITL(test)" "Comment:for NFIMM pub release" "Creation Time:file" -z
+
 ```
 
 ## Check the Result
@@ -41,19 +75,15 @@ NFIMM\img\dest> dir
     <DIR>          .
     <DIR>          ..
            191,986 ducks_grey.png
-           191,986 ducks_grey_compare.png
+           191,986 ducks_grey_comp.png
 ```
-The generated and "compare" images are same size, and comparison of the headers should prove identical except timestamp.
-
-<!-- start readme overview -->
-
-# Overview
-**NFIMM** functions to update image (file) metadata information.  It leaves the original image file unchanged and generates a new image file with the updated metadata.  It is incumbent upon users to manage their image files.
-
-<!-- end readme overview -->
+The generated and "compare" image headers should be identical except timestamp.
 
 ## Example Usage Scenario by NFIR
-The NIST Fingerprint Image Resampler (**NFIR**) library is utilized to downsample a PNG source image's image-data from 600 to 500 PPI (pixels per inch); the 500PPI image (known as the "destination") is saved to the file system.  In order to be most correct after resampling, the destination image sample rate (resolution/DPI) header info should be updated to reflect the new sample rate.
+The NIST Fingerprint Image Resampler (**NFIR**) library is utilized to downsample a PNG source image's image-data
+ from 600 to 500 PPI (pixels per inch); the 500PPI image (known as the "destination") is saved to the file system.
+ In order to be most correct after resampling, the destination image sample rate (resolution/DPI) header info should
+ be updated to reflect the new sample rate.
 
 Get **NFIR** here: https://github.com/usnistgov/NFIR
 
@@ -101,7 +131,7 @@ The following are supplied by the NFIMM user/caller:
 Note that the destination image compression format is constrained to be the same as the source image and therefore
 is not a required input parameter.
 
-Table 2 lists the available metadata parameters:
+*Table 2* lists the available metadata parameters:
 
 Metadata | Required? | Notes
 --------------------------------|-----|--------------------------
@@ -110,16 +140,18 @@ destination image sample rate   | yes | NFIMM raison d'etre
 destination image sample units  | yes | [ "inch" or "meter" ]
 source image sample rate        | no  | see table below
 custom text                     | no  | see table below
-**Table 2 - NFIMM metadata**
+*Table 2 - NFIMM metadata*
 
 Parameter | Required? | Note
 ----------|-----------|-
 source image sample rate | no | however, is required if used in PNG custom text
 sample image rate units  | no | same as destination
-**Table 3 - Source Sample rate parameters**
+*Table 3 - Source Sample rate parameters*
 
 ### PNG Custom Text
-Custom text is not ever required to be supplied by the caller of NFIMM.  However, it is useful, see example scenario below.  There are two custom text chunks that are programmatically created and inserted into the destination header by default:
+Custom text is not ever required to be supplied by the caller of NFIMM.  However, it is useful, see example scenario
+ below.  There are two custom text chunks that are programmatically created and inserted into the destination header
+ by default:
 * Software:NFIMM version, and either
 * Comment:NFIMM updated source pHYs resolution from {src-img} to {dest-img}PPI, or
 * Comment:NFIMM inserted pHYs resolution as {dest-img}PPI
@@ -130,7 +162,7 @@ Description   | no | any custom text supplied by user (can be long)
 Software      | no | that used to modify the source image's actual image data
 Creation Time | no | [ "now" or "file" ]
 et al         | no | See PNG Specification 1.2
-**Table 4 - PNG valid custom text parameters**
+*Table 4 - PNG valid custom text parameters*
 
 Keyword  | Text | Note
 ---------|------|-
@@ -138,70 +170,11 @@ Description  | Resampled with NFIR from 600PPI ideal bilinear | .
 Software | resampled by NFIR v0.1.1 | .
 Author   | Twain | .
 Creation Time | now | system time at runtime
-**Table 5 - PNG custom text example scenario**
+*Table 5 - PNG custom text example scenario*
 
 
 ## Miscues/Exceptions
 All caught exceptions cause the library to abort and throw the exception message to the user.
-
-
-# Build NFIMM
-See file `./build_commands.txt`.
-
-# Use NFIMM
-A binary is included in this project to server as an example of how to use NFIMM.
-
-## Perform the Metadata Modification
-The code-block below demonstrates how the **NFIMM** library is utilized including initialization of the metadata
-parameters, instantiation of the proper derived-class, and calls to the API:
-
-```
-  #include "nfimm.h"
-
-  // Declare the pointers to metadata params and metadata modifier objects.
-  // NFIMM is the base class for PNG and BMP derived classes.
-  std::shared_ptr<NFIMM::MetadataParameters> mp;
-  std::unique_ptr<NFIMM::NFIMM> nfimm_mp;
-
-  try
-  {
-    mp.reset( new NFIMM::MetadataParameters( imageFormat ) );
-    mp->srcImg.resolution.horiz = srcSampleRate;
-    mp->srcImg.resolution.vert = srcSampleRate;
-    mp->set_srcImgSampleRateUnits( sampleRateUnits );
-    mp->destImg.resolution.horiz = destSampleRate;
-    mp->destImg.resolution.vert = destSampleRate;
-    mp->set_destImgSampleRateUnits( sampleRateUnits );
-    mp->destImg.textChunk = vecPngTextChunk;
-  }
-  catch( const NFIMM::Miscue &e )
-  {
-    std::cout << "NFIMM user caught exception: " << e.what() << std::endl;
-    exit(0);
-  }
-
-  // Determine which object to instantiate.
-  if( imageFormat == "bmp" )
-    nfimm_mp.reset( new NFIMM::BMP( mp ) );
-  else
-    nfimm_mp.reset( new NFIMM::PNG( mp ) );
-
-  // Read the image, modify the header, save to new file
-  try
-  {
-    nfimm_mp->readImageFileIntoBuffer( pathToSrcImage );
-    nfimm_mp->modify();
-    nfimm_mp->writeImageBufferToFile( pathToDestImage );
-  }
-  catch( const NFIMM::Miscue &e )
-  {
-    std::cout << "NFIMM modification exception " << e.what() << std::endl;
-    for( auto s : mp->log ) {
-      std::cout << termcolor::red << " * " << s << termcolor::grey << std::endl;
-    }
-    exit(0);
-  }
-```
 
 ### Doxygen
 See README under `./doc` directory.

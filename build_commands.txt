@@ -6,16 +6,16 @@ Windows is OFSMount (osforensics.com).
 
 Open a PowerShell terminal, create and change-to the 'build' subdir, and run:
 
-.\NFIMM\build> cmake -S .. -B R:\NFIMM -DCMAKE_CONFIGURATION_TYPES="Release" -D_WIN32_64=1
-.\NFIMM\build> MSBuild.exe R:\NFIMM\NFIMM.sln
+.\NFIMM\build> cmake -S .. -B R:\NFIMM_ITL -DCMAKE_CONFIGURATION_TYPES="Release" -D_WIN32_64=1
+.\NFIMM\build> MSBuild.exe R:\NFIMM_ITL\NFIMM_ITL.sln
 
 Library file is located here on successful build:
-R:\NFIMM\src\lib\Release\NFIMM.lib
+R:\NFIMM_ITL\src\lib\Release\NFIMM_ITL.lib
 
 ## How to Run Example Binary
 Open a terminal:
 ```
-R:\NFIMM\src\bin\Release>NFIMM_bin.exe
+R:\NFIMM_ITL\src\bin\Release>NFIMM_bin.exe
 ```
 
 # Linux and Mac

@@ -1,33 +1,93 @@
-#include <iostream>
-#include <string>
+/*******************************************************************************
+License:
+This software was developed at the National Institute of Standards and
+Technology (NIST) by employees of the Federal Government in the course
+of their official duties. Pursuant to title 17 Section 105 of the
+United States Code, this software is not subject to copyright protection
+and is in the public domain. NIST assumes no responsibility  whatsoever for
+its use by other parties, and makes no guarantees, expressed or implied,
+about its quality, reliability, or any other characteristic.
 
+This software has been determined to be outside the scope of the EAR
+(see Part 734.3 of the EAR for exact details) as it has been created solely
+by employees of the U.S. Government; it is freely distributed with no
+licensing requirements; and it is considered public domain. Therefore,
+it is permissible to distribute this software as a free download from the
+internet.
+
+Disclaimer:
+This software was developed to promote biometric standards and biometric
+technology testing for the Federal Government in accordance with the USA
+PATRIOT Act and the Enhanced Border Security and Visa Entry Reform Act.
+Specific hardware and software products identified in this software were used
+in order to perform the software development.  In no case does such
+identification imply recommendation or endorsement by the National Institute
+of Standards and Technology, nor does it imply that the products and equipment
+identified are necessarily the best available for the purpose.
+*******************************************************************************/
+#include <iostream>
+
+#include "CLI11.hpp"
 #include "nfimm.h"
+#include "nfimm_bin.h"
+
+
+void procArgs( CLI::App &, CmdLineOptions & );
 
 
 int main(int argc, char** argv) 
 {
-  // Create the path to src image
-  std::string pathToSrcImage, pathToDestImage;
-  // std::cout << "pathToSrcImage: " << pathToSrcImage << std::endl;
-  const std::string srcImgCompressionType{"png"};
 
-  // Declare the pointers to metadata params and metadata modifier objects.
-  // NFIMM is the base class for PNG and BMP derived classes.
-  std::shared_ptr<NFIMM::MetadataParameters> mp;
-  std::unique_ptr<NFIMM::NFIMM> nfimm_mp;
-  // std::unique_ptr<NFIMM::NFIMM> nfimm_mp = std::make_unique<NFIMM::NFIMM>(mp);
+  CLI::App app{"Modify image metadata only; image-data not modified."};
+
+  // If cmd line has zero switches, force -h.
+  if( argc==1 )
+  {
+    char hlp[8] = "--help\0";
+    argv[argc++] = hlp;
+    // Line below prevents CLI11 error: 'The following argument was not expected:'
+    // when binary is run with zero params, ie, argc=1.
+    std::cout << std::endl;
+  }
+
+  procArgs( app, opts );
+
+  // This is what the macro CLI11_PARSE expands to:
+  // CLI11_PARSE(app, argc, argv);
   try
   {
-    // START Create the metadata
-    mp.reset( new NFIMM::MetadataParameters( srcImgCompressionType ) );
-    mp->srcImg.resolution.horiz = 600;
-    mp->srcImg.resolution.vert = 600;
-    mp->set_srcImgSampleRateUnits( "inch" );
-    mp->destImg.resolution.horiz = 500;
-    mp->destImg.resolution.vert = 500;
-    mp->set_destImgSampleRateUnits( "inch" );
-    mp->destImg.textChunk = {};
-    // END Create the metadata
+    app.parse( argc, argv );
+  }
+  catch( const CLI::ParseError &e )   // also catches help switch
+  {
+    app.exit(e);    // prints help menu to console
+    return -1;
+  }
+
+  if( opts.prVer ) {
+    std::cout << "*** Call NFIMM::printVersion() ***" << std::endl;
+    std::cout << NFIMM::printVersion() << std::endl;
+    return(0);
+  }
+
+  if( opts.flagVerbose )
+    opts.printOptions();  
+
+
+  // Declare the pointers to metadata params and metadata modifier objects.
+  // NFIMM is the base class for supported compression type's derived class.
+  std::shared_ptr<NFIMM::MetadataParameters> mp;
+  std::unique_ptr<NFIMM::NFIMM> nfimm_mp;
+  try
+  {
+    // Create the metadata
+    mp.reset( new NFIMM::MetadataParameters( opts.imageFormat ) );
+    mp->srcImg.resolution.horiz = opts.srcSampleRate;
+    mp->srcImg.resolution.vert = opts.srcSampleRate;
+    mp->set_srcImgSampleRateUnits( opts.sampleRateUnits );
+    mp->destImg.resolution.horiz = opts.tgtSampleRate;
+    mp->destImg.resolution.vert = opts.tgtSampleRate;
+    mp->set_destImgSampleRateUnits( opts.sampleRateUnits );
   }
   catch( const NFIMM::Miscue &e )
   {
@@ -37,60 +97,21 @@ int main(int argc, char** argv)
 
   try
   {
-    if( srcImgCompressionType == "bmp" )
+    if( opts.imageFormat == "bmp" )
     {
-      std::vector<std::string> vecPngTextChunk{};
-      mp->destImg.textChunk = vecPngTextChunk;
-      pathToSrcImage = "your-input-image.bmp";
-      pathToDestImage = "your-output-image.bmp";
-      std::cout << "pathToSrcImage: " << pathToSrcImage << std::endl;
       nfimm_mp.reset( new NFIMM::BMP( mp ) );
     }
     else  // must be png
     {
-      // Update the meta params with png tEXt chunk info
-      std::vector<std::string> vecPngTextChunk
-      { "Comment:for NFIMM pub release",
-        // "Software:not used",
-        "Author:NIST-ITL(test)",
-        "Description:Original image downsampled from 600PPI",
-        "Creation Time:file" };
-      mp->destImg.textChunk = vecPngTextChunk;
-
-      pathToSrcImage = "..\\..\\..\\..\\img\\src\\ducks_grey.png";
-      pathToDestImage = "..\\..\\..\\..\\img\\dest\\ducks_grey.png";
-      std::cout << "pathToSrcImage: " << pathToSrcImage << std::endl;
-      std::cout << "pathToDestImage: " << pathToDestImage << std::endl;
+      mp->destImg.textChunk = opts.vecPngTextChunk;
       nfimm_mp.reset( new NFIMM::PNG( mp ) );
     }
 
-
-    // Source and destination images API is either path-to-file or vector-of-bytes.
-    // TO run this code, either API is commented in/out
-    // ++++++++++ START API: path-to-file ++++++++++++++++++++++++++++++++++++++
-    // std::cout << nfimm_mp->to_s() << std::endl;
-    // nfimm_mp->readImageFileIntoBuffer( pathToSrcImage );
-    // nfimm_mp->modify();
-    // nfimm_mp->writeImageBufferToFile( pathToDestImage );
-    // ++++++++++ END API: path-to-file ++++++++++++++++++++++++++++++++++++++++
-
-    // ++++++++++ START API: vector-of-bytes +++++++++++++++++++++++++++++++++++
-    // There are 2 "ways" to handle the destination image:
-    //  1) write the buffer to file
-    //  2) retrieve the destination image as vector of bytes
-    // These 2 ways enable maximum flexibility for the NFIMM-user.
-    // Seems reasonable that to test the vector-of-bytes API
-    // readImageFileIntoBuffer() call it is sufficient to call the
-    // nfimm_mp->writeImageBufferToFile( pathToDestImage ).
-    //
-    // To test the retrieveWriteImageBuffer( vecDestImage ) call, this code
-    // block writes the file to disk.
-    // std::cout << nfimm_mp->to_s() << std::endl;
     std::vector<uint8_t> vecSourceImage, vecDestImage;
 
     {
       std::fstream strm;
-      strm.open( pathToSrcImage, std::ios::in|std::ios::binary );
+      strm.open( opts.srcImgPath, std::ios::in|std::ios::binary );
 
       vecSourceImage.clear();
       std::vector<uint8_t> tmp(
@@ -99,28 +120,18 @@ int main(int argc, char** argv)
       vecSourceImage = tmp;
     }
 
-    // std::cout << "vecSourceImage.size(): " << vecSourceImage.size() << std::endl;
     nfimm_mp->readImageFileIntoBuffer( vecSourceImage );
     nfimm_mp->modify();
-    nfimm_mp->writeImageBufferToFile( pathToDestImage );
+    nfimm_mp->writeImageBufferToFile( opts.tgtImgPath );
 
-    // vecDestImage.clear();
-    // nfimm_mp->retrieveWriteImageBuffer( vecDestImage );
-    // std::cout << "vecDestImage.size(): " << vecDestImage.size() << std::endl;
-    // {
-    //   std::fstream strm;
-    //   strm.open( pathToDestImage, std::ios::out|std::ios::binary );
-
-    //   for (const auto &e : vecDestImage) strm << e;
-    //   strm.close();
-    // }
-    // ++++++++++ END API: vector-of-bytes +++++++++++++++++++++++++++++++++++++
-
-    std::cout << "START USER-SPECIFIED Metadata Paramaters:" << std::endl;
-    std::cout << mp->to_s() << std::endl;
-    std::cout << "START RUNTIME Metadata LOG:" << std::endl;
-    for( std::string s : mp->log ) { std::cout << s << std::endl; }
-    std::cout << "pathToDestImage: " << pathToDestImage << std::endl;
+    if( opts.flagVerbose )
+    {
+      std::cout << "START RUNTIME Metadata LOG:" << std::endl;
+      for( std::string s : mp->log ) { std::cout << s << std::endl; }
+      std::cout << "START USER-SPECIFIED Metadata Paramaters:" << std::endl;
+      std::cout << mp->to_s() << std::endl;
+      std::cout << "GENERATED IMAGE: " << opts.tgtImgPath << std::endl;
+    }
   }
   catch( const NFIMM::Miscue &e )
   {
@@ -128,4 +139,37 @@ int main(int argc, char** argv)
     exit(0);
   }
 
+}
+
+/** @brief Process the command-line options
+ *
+ * @param app CLI-application object reference
+ * @param opts command-line options object reference
+ */
+void
+procArgs( CLI::App &app, CmdLineOptions &opts )
+{
+
+  app.add_option( "-a, --src-samp-rate", opts.srcSampleRate, "Source imagery sample rate" );
+  app.add_option( "-b, --tgt-samp-rate", opts.tgtSampleRate, "Target imagery sample rate" );
+
+  app.add_option( "-c, --samp-rate-units", opts.sampleRateUnits, "[ inch | meter | other ]" );
+
+  app.add_option( "-e, --png-text-chunk", opts.vecPngTextChunk, "list of 'tEXt' chunks in format 'keyword:text'" );
+
+  app.add_option( "-m, --img-fmt", opts.imageFormat, "Image compression format [ bmp | png ], default is 'png'" );
+
+  app.add_option( "-s, --src-img-path", opts.srcImgPath, "Source image PATH (absolute or relative)" )
+    ->check(CLI::ExistingFile);
+  app.add_option( "-t, --tgt-img-path", opts.tgtImgPath, "Target image PATH (absolute or relative)" );
+
+  app.add_flag( "-v,--version", opts.prVer, "Print versions and exit" )
+    ->multi_option_policy()
+    ->ignore_case();
+
+  app.add_flag( "-z,--verbose", opts.flagVerbose, "Print target file PATH" )
+    ->multi_option_policy()
+    ->ignore_case();
+
+  app.get_formatter()->column_width(20);
 }
