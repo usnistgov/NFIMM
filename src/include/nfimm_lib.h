@@ -36,7 +36,7 @@ identified are necessarily the best available for the purpose.
 #include <vector>
 
 /** @brief NFIMM version number */
-const std::string NFIMM_VERSION{"0.1.1"};
+const std::string NFIMM_VERSION{"0.1.2"};
 
 
 namespace NFIMM {

@@ -58,6 +58,7 @@ void PNG::modify()
 {
   try
   {
+    PNG::_insertChunkIndex = 0;  // required for linux
     Signature sig( _params, s_readBuffer );
     // s_r_cursor = 8;
     _params->loggit( ">> Parse all chunks in source");

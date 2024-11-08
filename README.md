@@ -63,7 +63,7 @@ Note that for the runtime command below, the `-m` switch is not required because
  the source-image sample rate is optional (`-a`).
 
 ```
-.\NFIMM\build\src\bin\Release>NFIMM_bin.exe -b 500 -c inch -s ..\..\..\..\img\src\ducks_grey.png -t ..\..\..\..\img\dest\ducks_grey_comp.png -e "Description:Original image downsampled from 600PPI" "Author:NIST-ITL(test)" "Comment:for NFIMM pub release" "Creation Time:file" -z
+.\NFIMM\build\src\bin\Release> NFIMM_bin.exe -b 500 -c inch -s ..\img\src\ducks_grey.png -t ..\img\dest\ducks_grey_comp.png -e "Description:Original image downsampled from 600PPI" "Author:NIST-ITL" "Comment:for NFIMM pub release" "Creation Time:file" -z
 
 ```
 
@@ -139,7 +139,7 @@ source image compression format | yes | [ "png" or "bmp" ]
 destination image sample rate   | yes | NFIMM raison d'etre
 destination image sample units  | yes | [ "inch" or "meter" ]
 source image sample rate        | no  | see table below
-custom text                     | no  | see table below
+custom text                     | yes | see table below
 *Table 2 - NFIMM metadata*
 
 Parameter | Required? | Note
@@ -149,12 +149,13 @@ sample image rate units  | no | same as destination
 *Table 3 - Source Sample rate parameters*
 
 ### PNG Custom Text
-Custom text is not ever required to be supplied by the caller of NFIMM.  However, it is useful, see example scenario
- below.  There are two custom text chunks that are programmatically created and inserted into the destination header
+There are two custom text-chunks that are programmatically created and inserted into the destination header
  by default:
 * Software:NFIMM version, and either
 * Comment:NFIMM updated source pHYs resolution from {src-img} to {dest-img}PPI, or
 * Comment:NFIMM inserted pHYs resolution as {dest-img}PPI
+
+Also, at lease one custom text-chunk is required to be supplied by the caller of NFIMM.
 
 Keyword | Required? | Text
 --------|-----------|-

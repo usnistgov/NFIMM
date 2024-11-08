@@ -103,6 +103,12 @@ int main(int argc, char** argv)
     }
     else  // must be png
     {
+      if( opts.vecPngTextChunk[0] == "" )
+      {
+        std::cout << "\nImage format is PNG and png-text-chunk cannot be empty!"
+                  << std::endl;
+        exit(0);
+      }
       mp->destImg.textChunk = opts.vecPngTextChunk;
       nfimm_mp.reset( new NFIMM::PNG( mp ) );
     }
